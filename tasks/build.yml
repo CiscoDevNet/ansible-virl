@@ -42,7 +42,7 @@
         Content-Type: "text/xml;charset=UTF-8"
       body: "{{ topo_data }}"
     register: uri_results
-    until: uri_results['status']|default(0) < 300 or uri_results['status']|default(0) >= 400
+    until: uri_results['status']|default(0) < 300
     retries: 60
     delay: 10
   when: (uri_results.json.state != 'ACTIVE' | default(yes))|bool
