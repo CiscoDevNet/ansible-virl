@@ -1,0 +1,23 @@
+- name: Check the status of simulation {{ session }}
+  uri:
+    url: "http://{{ virl_host }}:19399/simengine/rest/status/{{ session }}"
+    user: "{{ virl_username }}"
+    password: "{{ virl_password }}"
+    method: GET
+  register: uri_results
+
+- assert:
+    that:
+      - uri_results.json.state == 'ACTIVE'
+    msg: "Session {{ session }} is not active.  Either it did not start properly or was not cleaned properly.  Please run the clean.yml playbook and try again."
+
+- name: Waiting for all nodes to become reachable for session {{ session }}
+  uri:
+    url: "http://{{ virl_host }}:19399/simengine/rest/nodes/{{ session }}"
+    user: "{{ virl_username }}"
+    password: "{{ virl_password }}"
+    method: GET
+  register: uri_results
+  until: (uri_results.json[session] is defined) and (uri_results.json[session].values() | map(attribute='reachable') | list | unique | join('') | bool)
+  retries: 60
+  delay: 10
