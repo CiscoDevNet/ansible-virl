@@ -1,14 +1,21 @@
-- name: Check for existing simulation
-  stat:
-    path: "{{ virl_sim_file }}"
-  register: stat_result
+- name: Check the status of simulation {{ session }}
+  uri:
+    url: "http://{{ virl_host }}:19399/simengine/rest/status/{{ session }}"
+    user: "{{ virl_username }}"
+    password: "{{ virl_password }}"
+    method: GET
+  register: uri_results
+  when: session != ""
+
+- name: Generate New Session ID
+  set_fact:
+    session: "{{ virl_tag }}_{{ topo_name }}_{{ topo_id }}"
+  when: session == ""
 
 - block:
   - name: Generate the Topology
     set_fact:
-#     topo_data: "{{ lookup('file', topo_file) }}"
       topo_data: "{{ lookup('template', 'virl1_topology.j2') }}"
-      session: "{{ virl_tag }}_{{ topo_name }}_{{ topo_id }}"
 
   - name: Write debug topology file
     copy:
@@ -38,36 +45,4 @@
     until: uri_results['status']|default(0) < 300 or uri_results['status']|default(0) >= 400
     retries: 60
     delay: 10
-  when: not stat_result.stat.exists
-
-- name: Get the existing session ID
-  set_fact:
-    session: "{{lookup('file', virl_sim_file) }}"
-  when: stat_result.stat.exists
-
-- name: Check the status of simulation {{ session }}
-  uri:
-    url: "http://{{ virl_host }}:19399/simengine/rest/status/{{ session }}"
-    user: "{{ virl_username }}"
-    password: "{{ virl_password }}"
-    method: GET
-  register: uri_results
-
-- assert:
-    that:
-      - uri_results.json.state == 'ACTIVE'
-    msg: "Session {{ session }} is not active.  Either it did not start properly or was not cleaned properly.  Please run the clean.yml playbook and try again."
-
-- set_fact:
-    session: "{{ lookup('file', virl_sim_file, errors='ignore') }}"
-
-- name: Waiting for all nodes to become reachable
-  uri:
-    url: "http://{{ virl_host }}:19399/simengine/rest/nodes/{{ session }}"
-    user: "{{ virl_username }}"
-    password: "{{ virl_password }}"
-    method: GET
-  register: uri_results
-  until: (uri_results.json[session] is defined) and (uri_results.json[session].values() | map(attribute='reachable') | list | unique | join('') | bool)
-  retries: 60
-  delay: 10
+  when: (uri_results.json.state != 'ACTIVE' | default(yes))|bool
