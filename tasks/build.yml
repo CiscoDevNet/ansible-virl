@@ -10,6 +10,7 @@
 - name: Generate New Session ID
   set_fact:
     session: "{{ virl_tag }}_{{ topo_name }}_{{ topo_id }}"
+    build: yes
   when: session == ""
 
 - block:
@@ -45,4 +46,4 @@
     until: uri_results['status']|default(0) < 300
     retries: 60
     delay: 10
-  when: (uri_results.json.state != 'ACTIVE' | default(yes))|bool
+  when: build|default(no) or (uri_results.json.state != 'ACTIVE')
