@@ -46,4 +46,4 @@
     until: uri_results['status']|default(0) < 300
     retries: 60
     delay: 10
-  when: build|default(no) or (uri_results.json.state != 'ACTIVE')
+  when: (build | default('false') | bool ) or (uri_results.json.state != 'ACTIVE')
