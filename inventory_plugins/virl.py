@@ -149,8 +149,35 @@ class InventoryModule(BaseInventoryPlugin):
         # if you dont define any options you can skip
         # self.set_options()
 
-        self._read_virlrc()
-        self._get_simulation()
+        # self._read_virlrc()
+        # self._get_simulation()
+
+        if 'VIRL_HOST' in os.environ and len(os.environ['VIRL_HOST']):
+            self.virl_host = os.environ['VIRL_HOST']
+        else:
+            self.virl_host = self.get_option('host')
+
+        self.display.vvv("virl.py - VIRL_HOST: {0}".format(self.virl_host))
+
+        if 'VIRL_USERNAME' in os.environ and len(os.environ['VIRL_USERNAME']):
+            self.virl_username = os.environ['VIRL_USERNAME']
+        else:
+            self.virl_username = self.get_option('username')
+
+        self.display.vvv("virl.py - VIRL_USERNAME: {0}".format(self.virl_username))
+
+        if 'VIRL_PASSWORD' in os.environ and len(os.environ['VIRL_PASSWORD']):
+            self.virl_password = os.environ['VIRL_PASSWORD']
+        else:
+            self.virl_password = self.get_option('password')
+
+
+        if 'VIRL_LAB' in os.environ and len(os.environ['VIRL_LAB']):
+            self.virl_lab = os.environ['VIRL_LAB']
+        else:
+            self.virl_lab = self.get_option('lab')
+
+        self.display.vvv("virl.py - VIRL_LAB: {0}".format(self.virl_lab))
 
         self.inventory.set_variable('all', 'virl_host', self.virl_host)
         self.inventory.set_variable('all', 'virl_username', self.virl_username)
