@@ -15,8 +15,7 @@ def run_module():
     # define available arguments/parameters a user can pass to the module
     argument_spec = virl_argument_spec()
     argument_spec.update(state=dict(type='str', choices=['absent', 'present', 'started', 'stopped', 'wiped'], default='present'),
-                         name=dict(type='str', required=True),
-                         lab=dict(type='str'),
+                         lab=dict(type='str', required=True),
                          file=dict(type='str'),
     )
 
@@ -39,18 +38,20 @@ def run_module():
                            supports_check_mode=True,
                            )
     virl = virlModule(module)
-    labs = virl.client.find_labs_by_title(virl.params['name'])
+    labs = virl.client.find_labs_by_title(virl.params['lab'])
     if len(labs) > 0:
         lab = labs[0]
     else:
-        lan = None
+        lab = None
 
     if virl.params['state'] == 'present':
-        if len(labs) == 0:
-            lab = virl.client.create_lab(virl.params['name'])
-            virl.result['changed'] = True
+        if lab == None:
             if virl.params['file']:
-                virl.client.import_lab_from_path(virl.params['file'], virl.params['name'])
+                virl.client.import_lab_from_path(virl.params['file'], virl.params['lab'])
+            else:
+                lab = virl.client.create_lab(virl.params['lab'])
+            virl.result['changed'] = True
+
     elif virl.params['state'] == 'absent':
         if lab:
             virl.result['changed'] = True
