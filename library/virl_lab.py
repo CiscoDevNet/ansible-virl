@@ -47,9 +47,10 @@ def run_module():
     if virl.params['state'] == 'present':
         if lab == None:
             if virl.params['file']:
-                virl.client.import_lab_from_path(virl.params['file'], virl.params['lab'])
+                lab = virl.client.import_lab_from_path(virl.params['file'], name=virl.params['lab'])
             else:
-                lab = virl.client.create_lab(virl.params['lab'])
+                lab = virl.client.create_lab(name=virl.params['lab'])
+            lab.set_title(virl.params['lab'])
             virl.result['changed'] = True
 
     elif virl.params['state'] == 'absent':

@@ -149,6 +149,9 @@ class InventoryModule(BaseInventoryPlugin):
                         'data_volume': node.data_volume,
                         'tags': node.tags()
                     }
+                    # for tag in node.tags():
+                    #     if '=' in tag:
+
                     interface_list = []
                     ansible_host = None
                     for interface in node.interfaces():
