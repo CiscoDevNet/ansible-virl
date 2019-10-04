@@ -66,6 +66,8 @@ def run_module():
         if node.state not in ['STARTED','BOOTED']:
             if node.state == 'DEFINED_ON_CORE' and virl.params['config']:
                 node.config = virl.params['config']
+            if virl.params['image_definition']:
+                node.image_definition = virl.params['image_definition']
             if virl.params['wait'] == False:
                 lab.wait_for_covergence = False    
             node.start()            

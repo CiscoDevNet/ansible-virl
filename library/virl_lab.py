@@ -56,6 +56,11 @@ def run_module():
     elif virl.params['state'] == 'absent':
         if lab:
             virl.result['changed'] = True
+            if lab.state == "STARTED":
+                lab.stop()
+                lab.wipe()
+            elif lab.state == "STOPPED":
+                lab.wipe()
             lab.remove()
     elif virl.params['state'] == 'stopped':
         if lab:
