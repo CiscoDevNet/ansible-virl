@@ -66,13 +66,17 @@ def run_module():
         if node.state not in ['STARTED','BOOTED']:
             if node.state == 'DEFINED_ON_CORE' and virl.params['config']:
                 node.config = virl.params['config']
-            node.start(wait=virl.params['wait'])            
+            if virl.params['wait'] == False:
+                lab.wait_for_covergence = False    
+            node.start()            
             virl.result['changed'] = True
     elif virl.params['state'] == 'stopped':
         if node == None:
             virl.fail_json("Node must be created before it is stopped")
         if node.state not in ['STOPPED','DEFINED_ON_CORE']:
-            node.stop(wait=virl.params['wait'])            
+            if virl.params['wait'] == False:
+                lab.wait_for_covergence = False
+            node.stop()            
             virl.result['changed'] = True                
     elif virl.params['state'] == 'wiped':
         if node == None:

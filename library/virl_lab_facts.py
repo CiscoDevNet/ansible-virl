@@ -14,9 +14,7 @@ from ansible.module_utils.virl import virlModule, virl_argument_spec
 def run_module():
     # define available arguments/parameters a user can pass to the module
     argument_spec = virl_argument_spec()
-    argument_spec.update(state=dict(type='str', choices=['absent', 'present', 'started', 'stopped', 'wiped'], default='present'),
-                         lab=dict(type='str', required=True),
-                         file=dict(type='str'),
+    argument_spec.update(lab=dict(type='str', required=True),
     )
 
     # seed the result dict in the object
@@ -38,34 +36,38 @@ def run_module():
                            supports_check_mode=True,
                            )
     virl = virlModule(module)
+    virl_facts = {}
     labs = virl.client.find_labs_by_title(virl.params['lab'])
-    if len(labs) > 0:
+    if len(labs):
+        # Just take the first lab until we figure out how we want
+        # to handle duplicates
         lab = labs[0]
-    else:
-        lab = None
-
-    if virl.params['state'] == 'present':
-        if lab == None:
-            if virl.params['file']:
-                lab = virl.client.import_lab_from_path(virl.params['file'], name=virl.params['lab'])
-            else:
-                lab = virl.client.create_lab(name=virl.params['lab'])
-            lab.set_title(virl.params['lab'])
-            virl.result['changed'] = True
-
-    elif virl.params['state'] == 'absent':
-        if lab:
-            virl.result['changed'] = True
-            lab.remove()
-    elif virl.params['state'] == 'stopped':
-        if lab:
-            virl.result['changed'] = True
-            lab.stop()
-    elif virl.params['state'] == 'wiped':
-        if lab:
-            virl.result['changed'] = True
-            lab.wipe()
-
+        lab.sync()
+        virl_facts['details'] = lab.details()
+        virl_facts['nodes'] = {}
+        for node in lab.nodes():
+            virl_facts['nodes'][node.label] = {
+                'state': node.state,
+                'image_definition': node.image_definition,
+                'node_definition': node.node_definition,
+                'cpus': node.cpus,
+                'ram': node.ram,
+                'config': node.config,
+                'data_volume': node.data_volume,
+                'tags': node.tags(),
+                'interfaces': {}
+            }
+            ansible_host = None
+            for interface in node.interfaces():
+                if interface.discovered_ipv4 and not ansible_host:
+                    ansible_host = interface.discovered_ipv4[0]
+                virl_facts['nodes'][node.label]['interfaces'][interface.label] = {
+                    'state': interface.state,
+                    'ipv4_addresses': interface.discovered_ipv4,
+                    'ipv6_addresses': interface.discovered_ipv6,
+                    'mac_address': interface.discovered_mac_address
+                }
+    virl.result['virl_facts'] = virl_facts
     virl.exit_json(**virl.result)
 
 def main():
