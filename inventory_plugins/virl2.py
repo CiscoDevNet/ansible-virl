@@ -87,14 +87,14 @@ class InventoryModule(BaseInventoryPlugin):
         else:
             self.host = self.get_option('host')
 
-        self.display.vvv("virl.py - VIRL_HOST: {0}".format(self.host))
+        self.display.vvv("virl2.py - VIRL_HOST: {0}".format(self.host))
 
         if 'VIRL_USERNAME' in os.environ and len(os.environ['VIRL_USERNAME']):
             self.username = os.environ['VIRL_USERNAME']
         else:
             self.username = self.get_option('username')
 
-        self.display.vvv("virl.py - VIRL_USERNAME: {0}".format(self.username))
+        self.display.vvv("virl2.py - VIRL_USERNAME: {0}".format(self.username))
 
         if 'VIRL_PASSWORD' in os.environ and len(os.environ['VIRL_PASSWORD']):
             self.password = os.environ['VIRL_PASSWORD']
@@ -106,13 +106,13 @@ class InventoryModule(BaseInventoryPlugin):
         else:
             self.lab = self.get_option('lab')
 
-        self.display.vvv("virl.py - VIRL_LAB: {0}".format(self.lab))
+        self.display.vvv("virl2.py - VIRL_LAB: {0}".format(self.lab))
 
         self.group = self.get_option('group')
         if  self.group == None:
             self.group = 'virl_hosts'
 
-        self.display.vvv("virl.py - Group: {0}".format(self.group))
+        self.display.vvv("virl2.py - Group: {0}".format(self.group))
 
         self.inventory.set_variable('all', 'virl_host', self.host)
         self.inventory.set_variable('all', 'virl_username', self.username)
@@ -125,54 +125,53 @@ class InventoryModule(BaseInventoryPlugin):
         except:
             raise AnsibleParserError('Unable to log into {0}'.format(url))
 
+        if not self.lab:
+            return
+
+        labs = (client.find_labs_by_title(self.lab))
+        if not labs:
+            return
+
         try:
             group = self.inventory.add_group(self.group)
         except AnsibleError as e:
             raise AnsibleParserError("Unable to add group %s: %s" % (group, to_text(e)))
         group_dict = {}
-        if self.lab:
-            labs = client.find_labs_by_title(self.lab)
-            if len(labs):
-                lab = (client.find_labs_by_title(self.lab))[0]
-                lab.sync()
-                lab.sync_states()
-                lab.sync_layer3_addresses()
-                for node in lab.nodes():
-                    self.inventory.add_host(node.label, group=self.group)
-                    virl = {
-                        'state': node.state,
-                        'image_definition': node.image_definition,
-                        'node_definition': node.node_definition,
-                        'cpus': node.cpus,
-                        'ram': node.ram,
-                        'config': node.config,
-                        'data_volume': node.data_volume,
-                        'tags': node.tags()
-                    }
-                    # for tag in node.tags():
-                    #     if '=' in tag:
 
-                    interface_list = []
-                    ansible_host = None
-                    for interface in node.interfaces():
-                        if interface.discovered_ipv4 and not ansible_host:
-                            ansible_host = interface.discovered_ipv4[0]
-                        interface_dict = {
-                            'name': interface.label,
-                            'state': interface.state,
-                            'ipv4_addresses': interface.discovered_ipv4,
-                            'ipv6_addresses': interface.discovered_ipv6,
-                            'mac_address': interface.discovered_mac_address
-                        }
-                        interface_list.append(interface_dict)
-                    virl.update({'interfaces': interface_list})
-                    self.inventory.set_variable(node.label, 'ansible_host', ansible_host)
-                    self.inventory.set_variable(node.label, 'virl_facts', virl)
-                    self.display.vvv("Adding {0}({1}) to group {2}, state: {3}, ansible_host: {4}".format(node.label, node.node_definition, self.group, node.state, ansible_host))
-                    # Group by node_definition
-                    if node.node_definition not in group_dict:
-                        try:
-                            group_dict[node.node_definition] = self.inventory.add_group(node.node_definition)
-                        except AnsibleError as e:
-                            raise AnsibleParserError("Unable to add group %s: %s" % (group, to_text(e)))
-                    self.inventory.add_host(node.label, group=node.node_definition)
+        lab = labs[0]
+        lab.sync()
+        for node in lab.nodes():
+            self.inventory.add_host(node.label, group=self.group)
+            virl = {
+                'state': node.state,
+                'image_definition': node.image_definition,
+                'node_definition': node.node_definition,
+                'cpus': node.cpus,
+                'ram': node.ram,
+                'config': node.config,
+                'data_volume': node.data_volume,
+            }
+            interface_list = []
+            ansible_host = None
+            for interface in node.interfaces():
+                if interface.discovered_ipv4 and not ansible_host:
+                    ansible_host = interface.discovered_ipv4[0]
+                interface_dict = {
+                    'name': interface.label,
+                    'state': interface.state,
+                    'ipv4_addresses': interface.discovered_ipv4,
+                    'ipv6_addresses': interface.discovered_ipv6,
+                    'mac_address': interface.discovered_mac_address
+                }
+                interface_list.append(interface_dict)
+            virl.update({'interfaces': interface_list})
+            self.inventory.set_variable(node.label, 'ansible_host', ansible_host)
+            self.inventory.set_variable(node.label, 'virl_facts', virl)
+            self.display.vvv("Adding {0}({1}) to group {2}, state: {3}, ansible_host: {4}".format(node.label, node.node_definition, self.group, node.state, ansible_host))
+            # Group by node_definition
+            if node.node_definition not in group_dict:
+                try:
+                    group_dict[node.node_definition] = self.inventory.add_group(node.node_definition)
+                except AnsibleError as e:
+                    raise AnsibleParserError("Unable to add group %s: %s" % (group, to_text(e)))
+            self.inventory.add_host(node.label, group=node.node_definition)
