@@ -108,6 +108,10 @@ class InventoryModule(BaseInventoryPlugin):
 
         self.display.vvv("virl2.py - VIRL_LAB: {0}".format(self.lab))
 
+        if not self.lab:
+            self.display.vvv("No lab defined.  Nothing to do.")
+            return
+
         self.group = self.get_option('group')
         if  self.group == None:
             self.group = 'virl_hosts'
@@ -125,13 +129,10 @@ class InventoryModule(BaseInventoryPlugin):
         except:
             raise AnsibleParserError('Unable to log into {0}'.format(url))
 
-        if not self.lab:
-            return
-
         labs = (client.find_labs_by_title(self.lab))
         if not labs:
             return
-
+            
         try:
             group = self.inventory.add_group(self.group)
         except AnsibleError as e:

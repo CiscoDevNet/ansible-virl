@@ -53,7 +53,7 @@ def run_module():
     if len(labs) > 0:
         lab = labs[0]
     else:
-        virl.fail_json(f"Cannot find lab {virl.params['lab']}")
+        virl.fail_json("Cannot find lab {0}".format(virl.params['lab']))
 
     node = virl.get_node_by_name(lab, virl.params['name'])
     if virl.params['state'] == 'present':
