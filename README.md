@@ -1,7 +1,7 @@
-Role Name
+ansible-virl
 =========
 
-A brief description of the role goes here.
+Modules for automating VIRL^2
 
 Requirements
 ------------
