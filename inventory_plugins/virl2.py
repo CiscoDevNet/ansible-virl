@@ -4,14 +4,12 @@ __metaclass__ = type
 import os
 import re
 import requests
-import simple_client
+# import simple_client
 
-# from ansible.errors import AnsibleError, AnsibleParserError
-# from ansible.module_utils.six import string_types
 from ansible.plugins.inventory import BaseInventoryPlugin
 from ansible.errors import AnsibleError, AnsibleParserError
 from ansible.module_utils._text import to_native, to_text
-from simple_client import ClientLibrary
+from virl2_client import ClientLibrary
 
 DOCUMENTATION = r'''
     name: virl

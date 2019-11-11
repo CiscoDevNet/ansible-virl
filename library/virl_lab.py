@@ -50,26 +50,26 @@ def run_module():
                 lab = virl.client.import_lab_from_path(virl.params['file'], name=virl.params['lab'])
             else:
                 lab = virl.client.create_lab(name=virl.params['lab'])
-            lab.set_title(virl.params['lab'])
+            # lab.set_title(virl.params['lab'])
             virl.result['changed'] = True
 
     elif virl.params['state'] == 'absent':
         if lab:
             virl.result['changed'] = True
             if lab.state == "STARTED":
-                lab.stop()
-                lab.wipe()
+                lab.stop(wait=True)
+                lab.wipe(wait=True)
             elif lab.state == "STOPPED":
-                lab.wipe()
+                lab.wipe(wait=True)
             lab.remove()
     elif virl.params['state'] == 'stopped':
         if lab:
             virl.result['changed'] = True
-            lab.stop()
+            lab.stop(wait=True)
     elif virl.params['state'] == 'wiped':
         if lab:
             virl.result['changed'] = True
-            lab.wipe()
+            lab.wipe(wait=True)
 
     virl.exit_json(**virl.result)
 

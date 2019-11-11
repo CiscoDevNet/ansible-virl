@@ -67,6 +67,7 @@ def run_module():
                     'ipv6_addresses': interface.discovered_ipv6,
                     'mac_address': interface.discovered_mac_address
                 }
+            virl_facts['nodes'][node.label]['ansible_host'] = ansible_host    
     virl.result['virl_facts'] = virl_facts
     virl.exit_json(**virl.result)
 

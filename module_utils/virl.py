@@ -5,8 +5,8 @@ import requests
 import re
 import time
 from ansible.module_utils.basic import AnsibleModule, json, env_fallback
-import simple_client
-from simple_client import ClientLibrary
+# import simple_client
+from virl2_client import ClientLibrary
 
 try:
     from json.decoder import JSONDecodeError
