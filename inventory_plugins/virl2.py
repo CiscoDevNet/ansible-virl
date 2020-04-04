@@ -164,7 +164,8 @@ class InventoryModule(BaseInventoryPlugin):
                 }
                 interface_list.append(interface_dict)
             virl.update({'interfaces': interface_list})
-            self.inventory.set_variable(node.label, 'ansible_host', ansible_host)
+            if ansible_host:
+                self.inventory.set_variable(node.label, 'ansible_host', ansible_host)
             self.inventory.set_variable(node.label, 'virl_facts', virl)
             self.display.vvv("Adding {0}({1}) to group {2}, state: {3}, ansible_host: {4}".format(node.label, node.node_definition, self.group, node.state, ansible_host))
             # Group by node_definition
