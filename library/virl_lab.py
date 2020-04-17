@@ -49,7 +49,7 @@ def run_module():
             if virl.params['file']:
                 lab = virl.client.import_lab_from_path(virl.params['file'], title=virl.params['lab'])
             else:
-                lab = virl.client.create_lab(name=virl.params['lab'])
+                lab = virl.client.create_lab(title=virl.params['lab'])
             lab.title = virl.params['lab']
             virl.result['changed'] = True
 
