@@ -5,9 +5,6 @@ TOPDIR = $(shell git rev-parse --show-toplevel)
 PYDIRS="ansible"
 VENV = venv_ansible_virl
 VENV_BIN=$(VENV)/bin
-SRC_FILES := $(shell find ansible -name \*.py)
-SPHINX_DEPS := $(shell find docs/src)
-NON_PYTHON_LIBS := $(shell ls | grep -v vmanage)
 
 help: ## Display help
 	@awk -F ':|##' \
@@ -51,7 +48,7 @@ format: $(VENV_BIN)/activate ## Format code
 	$(VENV_BIN)/yapf --style=yapf.ini -i -r *.py $(PYDIRS)
 
 pylint: $(VENV_BIN)/activate ## Run pylint
-	$(VENV_BIN)/pylint --output-format=parseable --rcfile .pylintrc *.py $(PYDIRS)
+	$(VENV_BIN)/pylint --output-format=parseable --rcfile .pylintrc *.py $(SRCFILES)
 
 check: check-format pylint ## Check code format & lint
 
