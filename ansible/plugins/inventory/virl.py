@@ -2,14 +2,12 @@ from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
 import os
-import re
-import requests
+# import simple_client
 
-# from ansible.errors import AnsibleError, AnsibleParserError
-# from ansible.module_utils.six import string_types
 from ansible.plugins.inventory import BaseInventoryPlugin
 from ansible.errors import AnsibleError, AnsibleParserError
 from ansible.module_utils._text import to_native, to_text
+from virl2_client import ClientLibrary
 
 DOCUMENTATION = r'''
     name: virl
@@ -31,99 +29,32 @@ DOCUMENTATION = r'''
         password: 
             description: user pass for the target system
             required: false
-        simulation:
-            description: The name of the VIRL simulation
+        lab:
+            description: The name of the VIRL lab
             required: false
+        group:
+            description: The name of group in which to put nodes
+            required: false            
         validate_certs: 
             description: certificate validation
             required: false
             choices: ['yes', 'no']
 '''
 
-VIRLRC_FILES = [
-    '.virlrc',
-    '~/.virlrc'
-]
 
 class InventoryModule(BaseInventoryPlugin):
 
     NAME = 'virl'
+
     def __init__(self):
         super(InventoryModule, self).__init__()
 
-        # from config 
-        self.virl_username = None
-        self.virl_password = None
-        self.virl_host = None
-        self.virl_simulation = None
-
-    def _read_virlrc(self):
-        result = {}
-        for config_file in VIRLRC_FILES:
-            if config_file[0] == '~':
-                config_file = os.path.expanduser(config_file)
-            if os.path.exists(config_file):
-                envre = re.compile(r'''^([^\s=]+)=(?:[\s"']*)(.+?)(?:[\s"']*)$''')
-                with open(config_file) as ins:
-                    for line in ins:
-                        match = envre.match(line)
-                        if line.startswith('#'):
-                            continue
-                        if match is not None:
-                            result[match.group(1)] = match.group(2)
-                break
-
-        if 'VIRL_HOST' in os.environ and len(os.environ['VIRL_HOST']):
-            self.virl_host = os.environ['VIRL_HOST']
-        elif self.get_option('host'):
-            self.virl_host = self.get_option('host')
-        elif 'VIRL_HOST' in result:
-            self.virl_host = result['VIRL_HOST']
-        else:
-            raise AnsibleParserError("VIRL hostname not specified")
-
-        self.display.vvv("virl.py - VIRL_HOST: {0}".format(self.virl_host))
-
-        if 'VIRL_USERNAME' in os.environ and len(os.environ['VIRL_USERNAME']):
-            self.virl_username = os.environ['VIRL_USERNAME']
-        elif self.get_option('username'):
-            self.virl_username = self.get_option('username')             
-        elif 'VIRL_USERNAME' in result:
-            self.virl_username = result['VIRL_USERNAME']
-        else:
-            raise AnsibleParserError("VIRL username not specified")
-
-        self.display.vvv("virl.py - VIRL_UERNAME: {0}".format(self.virl_username))
-
-        if 'VIRL_PASSWORD' in os.environ and len(os.environ['VIRL_PASSWORD']):
-            self.virl_password = os.environ['VIRL_PASSWORD']
-        elif self.get_option('password'):
-            self.virl_password = self.get_option('password')                       
-        elif 'VIRL_PASSWORD' in result:
-            self.virl_password = result['VIRL_PASSWORD']
-        else:
-            raise AnsibleParserError("VIRL password not specified")
-
-    def _get_simulation(self):
-
-        # vm = play.get_variable_manager()
-        # extra_vars = vm.extra_vars
-        # if extra_vars['simulation'] is defined:
-        #     self.simulation = extra_vars['simulation']
-
-        if 'VIRL_SIMULATION' in os.environ and len(os.environ['VIRL_SIMULATION']):
-            self.simulation = os.environ['VIRL_SIMULATION']
-        elif self.get_option('simulation'):
-            self.virl_simlulation = self.get_option('simulation')                  
-        if 'VIRL_SESSION' in os.environ:
-            self.simulation = os.environ['VIRL_SESSION']            
-        elif os.path.exists('.virl/default/id'):
-            with open('.virl/default/id') as file:
-                self.simulation = file.read()
-        else:
-            raise AnsibleParserError("VIRL simulation not specified")
-
-        self.display.vvv("virl.py - VIRL_SIMULATION: {0}".format(self.simulation))
+        # from config
+        self.username = None
+        self.password = None
+        self.host = None
+        self.lab = None
+        self.group = None
 
     def verify_file(self, path):
 
@@ -149,54 +80,99 @@ class InventoryModule(BaseInventoryPlugin):
         # if you dont define any options you can skip
         # self.set_options()
 
-        # self._read_virlrc()
-        # self._get_simulation()
-
         if 'VIRL_HOST' in os.environ and len(os.environ['VIRL_HOST']):
-            self.virl_host = os.environ['VIRL_HOST']
+            self.host = os.environ['VIRL_HOST']
         else:
-            self.virl_host = self.get_option('host')
+            self.host = self.get_option('host')
 
-        self.display.vvv("virl.py - VIRL_HOST: {0}".format(self.virl_host))
+        self.display.vvv("virl2.py - VIRL_HOST: {0}".format(self.host))
 
         if 'VIRL_USERNAME' in os.environ and len(os.environ['VIRL_USERNAME']):
-            self.virl_username = os.environ['VIRL_USERNAME']
+            self.username = os.environ['VIRL_USERNAME']
         else:
-            self.virl_username = self.get_option('username')
+            self.username = self.get_option('username')
 
-        self.display.vvv("virl.py - VIRL_USERNAME: {0}".format(self.virl_username))
+        self.display.vvv("virl2.py - VIRL_USERNAME: {0}".format(self.username))
 
         if 'VIRL_PASSWORD' in os.environ and len(os.environ['VIRL_PASSWORD']):
-            self.virl_password = os.environ['VIRL_PASSWORD']
+            self.password = os.environ['VIRL_PASSWORD']
         else:
-            self.virl_password = self.get_option('password')
-
+            self.password = self.get_option('password')
 
         if 'VIRL_LAB' in os.environ and len(os.environ['VIRL_LAB']):
-            self.virl_lab = os.environ['VIRL_LAB']
+            self.lab = os.environ['VIRL_LAB']
         else:
-            self.virl_lab = self.get_option('lab')
+            self.lab = self.get_option('lab')
 
-        self.display.vvv("virl.py - VIRL_LAB: {0}".format(self.virl_lab))
+        self.display.vvv("virl2.py - VIRL_LAB: {0}".format(self.lab))
 
-        self.inventory.set_variable('all', 'virl_host', self.virl_host)
-        self.inventory.set_variable('all', 'virl_username', self.virl_username)
-        self.inventory.set_variable('all', 'virl_password', self.virl_password)
-        self.inventory.set_variable('all', 'virl_session', self.simulation)
-        self.inventory.set_variable('all', 'virl_simulation', self.simulation)
+        if not self.lab:
+            self.display.vvv("No lab defined.  Nothing to do.")
+            return
 
-        url = "http://%s:19399/simengine/rest/interfaces/%s" % (self.virl_host, self.simulation)
+        self.group = self.get_option('group')
+        if self.group is None:
+            self.group = 'virl_hosts'
 
-        # perform REST operation
-        simulations = requests.get(url, auth=(self.virl_username, self.virl_password))
-        if simulations.status_code == 200:
+        self.display.vvv("virl2.py - Group: {0}".format(self.group))
 
-            interfaces = simulations.json()[self.simulation]
-            try:
-                group = self.inventory.add_group('virl_hosts')
-            except AnsibleError as e:
-                raise AnsibleParserError("Unable to add group %s: %s" % (group, to_text(e)))
+        self.inventory.set_variable('all', 'virl_host', self.host)
+        self.inventory.set_variable('all', 'virl_username', self.username)
+        self.inventory.set_variable('all', 'virl_password', self.password)
+        self.inventory.set_variable('all', 'virl_lab', self.lab)
 
-            for key, value in interfaces.items():
-                self.inventory.add_host(key, group='virl_hosts')
-                self.inventory.set_variable(key, 'ansible_host', value['management']['ip-address'].split('/')[0])
+        url = 'https://{0}'.format(self.host)
+        try:
+            client = ClientLibrary(url, username=self.username, password=self.password, ssl_verify=False)
+        except:
+            raise AnsibleParserError('Unable to log into {0}'.format(url))
+
+        labs = (client.find_labs_by_title(self.lab))
+        if not labs:
+            return
+
+        try:
+            group = self.inventory.add_group(self.group)
+        except AnsibleError as e:
+            raise AnsibleParserError("Unable to add group %s: %s" % (group, to_text(e)))
+        group_dict = {}
+
+        lab = labs[0]
+        lab.sync()
+        for node in lab.nodes():
+            self.inventory.add_host(node.label, group=self.group)
+            virl = {
+                'state': node.state,
+                'image_definition': node.image_definition,
+                'node_definition': node.node_definition,
+                'cpus': node.cpus,
+                'ram': node.ram,
+                'config': node.config,
+                'data_volume': node.data_volume,
+            }
+            interface_list = []
+            ansible_host = None
+            for interface in node.interfaces():
+                if interface.discovered_ipv4 and not ansible_host:
+                    ansible_host = interface.discovered_ipv4[0]
+                interface_dict = {
+                    'name': interface.label,
+                    'state': interface.state,
+                    'ipv4_addresses': interface.discovered_ipv4,
+                    'ipv6_addresses': interface.discovered_ipv6,
+                    'mac_address': interface.discovered_mac_address
+                }
+                interface_list.append(interface_dict)
+            virl.update({'interfaces': interface_list})
+            if ansible_host:
+                self.inventory.set_variable(node.label, 'ansible_host', ansible_host)
+            self.inventory.set_variable(node.label, 'virl_facts', virl)
+            self.display.vvv("Adding {0}({1}) to group {2}, state: {3}, ansible_host: {4}".format(
+                node.label, node.node_definition, self.group, node.state, ansible_host))
+            # Group by node_definition
+            if node.node_definition not in group_dict:
+                try:
+                    group_dict[node.node_definition] = self.inventory.add_group(node.node_definition)
+                except AnsibleError as e:
+                    raise AnsibleParserError("Unable to add group %s: %s" % (group, to_text(e)))
+            self.inventory.add_host(node.label, group=node.node_definition)

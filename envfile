@@ -1,0 +1,1 @@
+ANSIBLE_VIRL_VERSION ?= $(shell venv_ansible_virl/bin/python setup.py --version)

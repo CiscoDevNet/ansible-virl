@@ -1,9 +1,4 @@
-import json
-import requests
-import re
-import time
 from ansible.module_utils.basic import AnsibleModule, json, env_fallback
-# import simple_client
 from virl2_client import ClientLibrary
 
 try:
@@ -11,16 +6,16 @@ try:
 except ImportError:
     JSONDecodeError = ValueError
 
+
 def virl_argument_spec():
     return dict(host=dict(type='str', required=True, fallback=(env_fallback, ['VIRL_HOST'])),
-            user=dict(type='str', required=True, fallback=(env_fallback, ['VIRL_USER'])),
-            password=dict(type='str', required=True, fallback=(env_fallback, ['VIRL_PASSWORD'])),
-            validate_certs=dict(type='bool', required=False, default=False),
-            timeout=dict(type='int', default=30)
-    )
+                user=dict(type='str', required=True, fallback=(env_fallback, ['VIRL_USERNAME'])),
+                password=dict(type='str', required=True, fallback=(env_fallback, ['VIRL_PASSWORD'])),
+                validate_certs=dict(type='bool', required=False, default=False),
+                timeout=dict(type='int', default=30))
+
 
 class virlModule(object):
-
     def __init__(self, module, function=None):
         self.module = module
         self.params = module.params
@@ -66,9 +61,8 @@ class virlModule(object):
             lab = self.client.join_existing_lab(id, sync_lab=True)
         except:
             lab = None
-            
-        return lab
 
+        return lab
 
     def create_lab(self, name):
         lab = self.client.create_lab(name=name)

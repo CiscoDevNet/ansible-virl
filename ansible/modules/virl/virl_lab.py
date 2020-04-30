@@ -1,22 +1,18 @@
 #!/usr/bin/env python
 
-ANSIBLE_METADATA = {
-    'metadata_version': '1.1',
-    'status': ['preview'],
-    'supported_by': 'community'
-}
-
-import requests
-from ansible.module_utils.basic import AnsibleModule, json
+from ansible.module_utils.basic import AnsibleModule, env_fallback
 from ansible.module_utils.virl import virlModule, virl_argument_spec
+
+ANSIBLE_METADATA = {'metadata_version': '1.1', 'status': ['preview'], 'supported_by': 'community'}
 
 
 def run_module():
     # define available arguments/parameters a user can pass to the module
     argument_spec = virl_argument_spec()
-    argument_spec.update(state=dict(type='str', choices=['absent', 'present', 'started', 'stopped', 'wiped'], default='present'),
-                         lab=dict(type='str', required=True),
-                         file=dict(type='str'),
+    argument_spec.update(
+        state=dict(type='str', choices=['absent', 'present', 'started', 'stopped', 'wiped'], default='present'),
+        lab=dict(type='str', required=True, fallback=(env_fallback, ['VIRL_LAB'])),
+        file=dict(type='str'),
     )
 
     # seed the result dict in the object
@@ -24,19 +20,16 @@ def run_module():
     # change is if this module effectively modified the target
     # state will include any data that you want your module to pass back
     # for consumption, for example, in a subsequent task
-    result = dict(
-        changed=False,
-        original_message='',
-        message=''
-    )
+    result = dict(changed=False, original_message='', message='')
 
     # the AnsibleModule object will be our abstraction working with Ansible
     # this includes instantiation, a couple of common attr would be the
     # args/params passed to the execution, as well as if the module
     # supports check mode
-    module = AnsibleModule(argument_spec=argument_spec,
-                           supports_check_mode=True,
-                           )
+    module = AnsibleModule(
+        argument_spec=argument_spec,
+        supports_check_mode=True,
+    )
     virl = virlModule(module)
     labs = virl.client.find_labs_by_title(virl.params['lab'])
     if len(labs) > 0:
@@ -45,7 +38,7 @@ def run_module():
         lab = None
 
     if virl.params['state'] == 'present':
-        if lab == None:
+        if lab is None:
             if virl.params['file']:
                 lab = virl.client.import_lab_from_path(virl.params['file'], title=virl.params['lab'])
             else:
@@ -73,8 +66,10 @@ def run_module():
 
     virl.exit_json(**virl.result)
 
+
 def main():
     run_module()
+
 
 if __name__ == '__main__':
     main()

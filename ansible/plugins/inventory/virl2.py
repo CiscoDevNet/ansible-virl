@@ -2,14 +2,10 @@ from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
 import os
-import re
-import requests
-# import simple_client
-
+from virl2_client import ClientLibrary
 from ansible.plugins.inventory import BaseInventoryPlugin
 from ansible.errors import AnsibleError, AnsibleParserError
 from ansible.module_utils._text import to_native, to_text
-from virl2_client import ClientLibrary
 
 DOCUMENTATION = r'''
     name: virl
@@ -43,13 +39,15 @@ DOCUMENTATION = r'''
             choices: ['yes', 'no']
 '''
 
+
 class InventoryModule(BaseInventoryPlugin):
 
     NAME = 'virl2'
+
     def __init__(self):
         super(InventoryModule, self).__init__()
 
-        # from config 
+        # from config
         self.username = None
         self.password = None
         self.host = None
@@ -111,7 +109,7 @@ class InventoryModule(BaseInventoryPlugin):
             return
 
         self.group = self.get_option('group')
-        if  self.group == None:
+        if self.group is None:
             self.group = 'virl_hosts'
 
         self.display.vvv("virl2.py - Group: {0}".format(self.group))
@@ -130,7 +128,7 @@ class InventoryModule(BaseInventoryPlugin):
         labs = (client.find_labs_by_title(self.lab))
         if not labs:
             return
-            
+
         try:
             group = self.inventory.add_group(self.group)
         except AnsibleError as e:
@@ -167,7 +165,8 @@ class InventoryModule(BaseInventoryPlugin):
             if ansible_host:
                 self.inventory.set_variable(node.label, 'ansible_host', ansible_host)
             self.inventory.set_variable(node.label, 'virl_facts', virl)
-            self.display.vvv("Adding {0}({1}) to group {2}, state: {3}, ansible_host: {4}".format(node.label, node.node_definition, self.group, node.state, ansible_host))
+            self.display.vvv("Adding {0}({1}) to group {2}, state: {3}, ansible_host: {4}".format(
+                node.label, node.node_definition, self.group, node.state, ansible_host))
             # Group by node_definition
             if node.node_definition not in group_dict:
                 try:
