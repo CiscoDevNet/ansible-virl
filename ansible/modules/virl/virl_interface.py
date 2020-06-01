@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from ansible.module_utils.basic import AnsibleModule, env_fallback
+# pylint: disable=no-name-in-module,import-error
 from ansible.module_utils.virl import virlModule, virl_argument_spec
 ANSIBLE_METADATA = {'metadata_version': '1.1', 'status': ['preview'], 'supported_by': 'community'}
 
@@ -22,12 +23,6 @@ def run_module():
         y=dict(type='int'),
     )
 
-    # seed the result dict in the object
-    # we primarily care about changed and state
-    # change is if this module effectively modified the target
-    # state will include any data that you want your module to pass back
-    # for consumption, for example, in a subsequent task
-    result = dict(changed=False, original_message='', message='')
 
     # the AnsibleModule object will be our abstraction working with Ansible
     # this includes instantiation, a couple of common attr would be the
@@ -38,6 +33,12 @@ def run_module():
         supports_check_mode=True,
     )
     virl = virlModule(module)
+    # seed the result dict in the object
+    # we primarily care about changed and state
+    # change is if this module effectively modified the target
+    # state will include any data that you want your module to pass back
+    # for consumption, for example, in a subsequent task
+    virl.result = dict(changed=False, original_message='', message='')
 
     if virl.params['lab_id']:
         lab = virl.get_lab_by_id(virl.params['lab_id'])

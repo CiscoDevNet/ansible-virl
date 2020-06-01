@@ -483,5 +483,5 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 
-viptela.egg-info/
-venv_python_viptela/
+ansible_virl.egg-info/
+venv_ansible_virl/

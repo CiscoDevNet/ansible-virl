@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from ansible.module_utils.basic import AnsibleModule, env_fallback
+# pylint: disable=no-name-in-module,import-error
 from ansible.module_utils.virl import virlModule, virl_argument_spec
 
 ANSIBLE_METADATA = {'metadata_version': '1.1', 'status': ['preview'], 'supported_by': 'community'}
@@ -24,12 +25,6 @@ def run_module():
         wait=dict(type='bool', default=False),
     )
 
-    # seed the result dict in the object
-    # we primarily care about changed and state
-    # change is if this module effectively modified the target
-    # state will include any data that you want your module to pass back
-    # for consumption, for example, in a subsequent task
-    result = dict(changed=False, original_message='', message='')
 
     # the AnsibleModule object will be our abstraction working with Ansible
     # this includes instantiation, a couple of common attr would be the
@@ -40,6 +35,12 @@ def run_module():
         supports_check_mode=True,
     )
     virl = virlModule(module)
+    # seed the result dict in the object
+    # we primarily care about changed and state
+    # change is if this module effectively modified the target
+    # state will include any data that you want your module to pass back
+    # for consumption, for example, in a subsequent task
+    virl.result = dict(changed=False, original_message='', message='')
 
     labs = virl.client.find_labs_by_title(virl.params['lab'])
     if len(labs) > 0:
@@ -60,7 +61,7 @@ def run_module():
                 node.config = virl.params['config']
             if virl.params['image_definition']:
                 node.image_definition = virl.params['image_definition']
-            if virl.params['wait'] == False:
+            if not virl.params['wait']:
                 lab.wait_for_covergence = False
             node.start()
             virl.result['changed'] = True
@@ -68,7 +69,7 @@ def run_module():
         if node is None:
             virl.fail_json("Node must be created before it is stopped")
         if node.state not in ['STOPPED', 'DEFINED_ON_CORE']:
-            if virl.params['wait'] == False:
+            if not virl.params['wait']:
                 lab.wait_for_covergence = False
             node.stop()
             virl.result['changed'] = True

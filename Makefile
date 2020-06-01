@@ -3,6 +3,7 @@ include envfile
 PYTHON_EXE = python3
 TOPDIR = $(shell git rev-parse --show-toplevel)
 PYDIRS="ansible"
+SRC_FILES := $(shell find ansible -name \*.py)
 VENV = venv_ansible_virl
 VENV_BIN=$(VENV)/bin
 
@@ -48,7 +49,7 @@ format: $(VENV_BIN)/activate ## Format code
 	$(VENV_BIN)/yapf --style=yapf.ini -i -r *.py $(PYDIRS)
 
 pylint: $(VENV_BIN)/activate ## Run pylint
-	$(VENV_BIN)/pylint --output-format=parseable --rcfile .pylintrc *.py $(SRCFILES)
+	/usr/bin/env PYTHONPATH=$(PYTHONPATH):. $(VENV_BIN)/pylint --output-format=parseable --rcfile .pylintrc *.py $(SRC_FILES)
 
 check: check-format pylint ## Check code format & lint
 
