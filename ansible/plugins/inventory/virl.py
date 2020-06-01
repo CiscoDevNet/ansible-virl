@@ -11,7 +11,6 @@ from ansible.utils.display import Display
 # pylint: disable=wrong-import-order
 from virl2_client import ClientLibrary
 
-
 DOCUMENTATION = r'''
     name: virl
     plugin_type: inventory

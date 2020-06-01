@@ -12,7 +12,6 @@ def run_module():
     argument_spec = virl_argument_spec()
     argument_spec.update(lab=dict(type='str', required=True), )
 
-
     # the AnsibleModule object will be our abstraction working with Ansible
     # this includes instantiation, a couple of common attr would be the
     # args/params passed to the execution, as well as if the module

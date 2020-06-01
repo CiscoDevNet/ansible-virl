@@ -23,7 +23,6 @@ def run_module():
         y=dict(type='int'),
     )
 
-
     # the AnsibleModule object will be our abstraction working with Ansible
     # this includes instantiation, a couple of common attr would be the
     # args/params passed to the execution, as well as if the module

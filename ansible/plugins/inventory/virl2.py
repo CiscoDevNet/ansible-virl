@@ -8,7 +8,6 @@ from ansible.errors import AnsibleError, AnsibleParserError
 from ansible.module_utils._text import to_text
 from ansible.utils.display import Display
 
-
 DOCUMENTATION = r'''
     name: virl
     plugin_type: inventory
