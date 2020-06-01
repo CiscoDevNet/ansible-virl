@@ -49,7 +49,7 @@ format: $(VENV_BIN)/activate ## Format code
 	$(VENV_BIN)/yapf --style=yapf.ini -i -r *.py $(PYDIRS)
 
 pylint: $(VENV_BIN)/activate ## Run pylint
-	/usr/bin/env PYTHONPATH=$(PYTHONPATH):. $(VENV_BIN)/pylint --output-format=parseable --rcfile .pylintrc *.py $(SRC_FILES)
+	$(VENV_BIN)/pylint --output-format=parseable --rcfile .pylintrc *.py $(SRC_FILES)
 
 check: check-format pylint ## Check code format & lint
 
