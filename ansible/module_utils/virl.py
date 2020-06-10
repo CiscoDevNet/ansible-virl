@@ -1,10 +1,6 @@
-from ansible.module_utils.basic import AnsibleModule, json, env_fallback
+from ansible.module_utils.basic import env_fallback
+# pylint: disable=wrong-import-order
 from virl2_client import ClientLibrary
-
-try:
-    from json.decoder import JSONDecodeError
-except ImportError:
-    JSONDecodeError = ValueError
 
 
 def virl_argument_spec():
@@ -56,18 +52,12 @@ class virlModule(object):
                 return node
         return None
 
-    def get_lab_by_id(self, id):
+    def get_lab_by_id(self, lab_id):
         try:
-            lab = self.client.join_existing_lab(id, sync_lab=True)
-        except:
+            lab = self.client.join_existing_lab(lab_id, sync_lab=True)
+        except Exception:
             lab = None
 
-        return lab
-
-    def create_lab(self, name):
-        lab = self.client.create_lab(name=name)
-        lab.set_title(name)
-        lab.sync()
         return lab
 
     def exit_json(self, **kwargs):

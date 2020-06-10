@@ -6,7 +6,9 @@ import os
 
 from ansible.plugins.inventory import BaseInventoryPlugin
 from ansible.errors import AnsibleError, AnsibleParserError
-from ansible.module_utils._text import to_native, to_text
+from ansible.module_utils._text import to_text
+from ansible.utils.display import Display
+# pylint: disable=wrong-import-order
 from virl2_client import ClientLibrary
 
 DOCUMENTATION = r'''
@@ -55,6 +57,7 @@ class InventoryModule(BaseInventoryPlugin):
         self.host = None
         self.lab = None
         self.group = None
+        self.display = Display()
 
     def verify_file(self, path):
 
@@ -62,7 +65,7 @@ class InventoryModule(BaseInventoryPlugin):
             endings = ('virl.yaml', 'virl.yml')
             if any((path.endswith(ending) for ending in endings)):
                 return True
-        display.debug("virl inventory filename must end with 'virl.yml' or 'virl.yaml'")
+        self.display.debug("virl inventory filename must end with 'virl.yml' or 'virl.yaml'")
         return False
 
     def parse(self, inventory, loader, path, cache=True):
