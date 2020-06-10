@@ -11,7 +11,7 @@ includes = [
 
 setup(
     name="ansible-virl",
-    version='0.0.7',
+    version='0.0.8dev1',
     packages=find_namespace_packages(include=includes),
     description="Cisco DevNet VIRL Ansible Modules",
     install_requires=['virl2_client'],
