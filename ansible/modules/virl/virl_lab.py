@@ -14,6 +14,7 @@ def run_module():
         state=dict(type='str', choices=['absent', 'present', 'started', 'stopped', 'wiped'], default='present'),
         lab=dict(type='str', required=True, fallback=(env_fallback, ['VIRL_LAB'])),
         file=dict(type='str'),
+        wait=dict(type='bool', default=True),
     )
 
     # the AnsibleModule object will be our abstraction working with Ansible
@@ -64,6 +65,12 @@ def run_module():
         if lab:
             virl.result['changed'] = True
             lab.wipe(wait=True)
+    elif virl.params["state"] == "started":
+        if lab:
+            if lab.state() != 'STARTED':
+                virl.result["changed"] = True
+                lab.start(wait=virl.params['wait'])
+
 
     virl.exit_json(**virl.result)
 
