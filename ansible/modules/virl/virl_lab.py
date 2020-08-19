@@ -71,7 +71,6 @@ def run_module():
                 virl.result["changed"] = True
                 lab.start(wait=virl.params['wait'])
 
-
     virl.exit_json(**virl.result)
 
 
